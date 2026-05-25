@@ -1,94 +1,335 @@
-local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"))()
+-- Safe check to ensure game is fully loaded before doing anything
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
 
+-- Fixed UI Source: Using the working Redz Library V5 link from rawscripts
+local redzlib = loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Redz-Library-V5-94837"))()
 local Window = redzlib:MakeWindow({
-  Title = "redz Hub : Blox Fruits",
-  SubTitle = "by Melbert",
-  SaveFolder = "testando | redz lib v5.lua"
-})
-Window:AddMinimizeButton({
-    Button = { Image = "rbxassetid://71014873973869", BackgroundTransparency = 0 },
-    Corner = { CornerRadius = UDim.new(35, 1) },
+    Title = "redz Hub: by Melbert",
+    SubTitle = "by redz9999",
+    SaveFolder = "redz Hub | Blox Fruits.lua"
 })
 
-local Tab1 = Window:MakeTab({"Um", "cherry"})
+local AFKOptions = {}
 
-Tab1:AddDiscordInvite({
-    Name = "Name Hub",
-    Description = "Join server",
-    Logo = "rbxassetid://18751483361",
-    Invite = "Link discord invite",
-})
+-- Safe Player Data Extraction & Initialization (Fixes empty tabs)
+local Player = game:GetService("Players").LocalPlayer
+local PlayerLevelValue = 0
+local MaxLevelValue = 2800  -- Level cap updated to 2800
 
-Window:SelectTab(Tab1)
-
-local Section = Tab1:AddSection({"Section"})
-
-local Paragraph = Tab1:AddParagraph({"Paragraph", "This is a Paragraph\nSecond Line"})
-
-  local Dialog = Window:Dialog({
-    Title = "Dialog",
-    Text = "This is a Dialog",
-    Options = {
-      {"Confirm", function()
-        
-      end},
-      {"Maybe", function()
-        
-      end},
-      {"Cancel", function()
-        
-      end}
-    }
-  })
-  
-  Tab1:AddButton({"Print", function(Value)
-print("Hello World!")
-end})
-
-local Toggle1 = Tab1:AddToggle({
-  Name = "Toggle",
-  Description = "This is a <font color='rgb(88, 101, 242)'>Toggle</font> Example",
-  Default = false 
-})
-Toggle1:Callback(function(Value)
- 
+local dataSuccess, dataErr = pcall(function()
+    local dataFolder = Player:FindFirstChild("Data") or Player:WaitForChild("Data", 5)
+    if dataFolder then
+        local levelObj = dataFolder:FindFirstChild("Level") or dataFolder:WaitForChild("Level", 5)
+        if levelObj then
+            PlayerLevelValue = levelObj.Value
+        end
+    end
 end)
 
-Tab1:AddToggle({
-    Name = "Toggle",
-    Default = false,
-    Callback = function(v)
+-- Dynamic Sea Detection
+local Sea1, Sea2, Sea3 = false, false, false
+if dataSuccess and PlayerLevelValue > 0 then
+    if PlayerLevelValue >= 1500 then
+        Sea3 = true
+    elseif PlayerLevelValue >= 700 then
+        Sea2 = true
+    else
+        Sea1 = true
+    end
+else
+    -- Fallback default if data check fails, ensuring tabs populate anyway
+    Sea3 = true
+end
 
+local IsOwner = true 
+
+-- Tabs Creation
+local Discord = Window:MakeTab({"Discord", "Info"})
+local MainFarm = Window:MakeTab({"Farm", "Home"})
+
+Discord:AddDiscordInvite({
+    Name = "redz Hub | Community",
+    Description = "Join our discord community to receive information about the next update",
+    Logo = "rbxassetid://15298567397",
+    Invite = "https://discord.gg/7aR7kNVt4g"
+})
+
+-- Load Third Sea Elements Safely
+if Sea3 then
+    local AutoSea = Window:MakeTab({"Sea", "Waves"})
+    AutoSea:AddSection({"Kitsune"})
+    
+    local KILabel = AutoSea:AddParagraph({"Kitsune Island not spawn"})
+    
+    AutoSea:AddToggle({
+        Name = "Auto Kitsune Island",
+        Callback = function(Value)
+            getgenv().AutoKitsuneIsland = Value
+            if type(AutoKitsuneIsland) == "function" then AutoKitsuneIsland() end
+        end
+    })
+    
+    AutoSea:AddToggle({
+        Name = "Auto Trade Azure Ember",
+        Callback = function(Value)
+            getgenv().TradeAzureEmber = Value
+            task.spawn(function()
+                local Modules = game:GetService("ReplicatedStorage"):WaitForChild("Modules", 9e9)
+                local Net = Modules:WaitForChild("Net", 9e9)
+                local KitsuneRemote = Net:WaitForChild("RF/KitsuneStatuePray", 9e9)
+ 
+                while getgenv().TradeAzureEmber do
+                    task.wait(1)
+                    if KitsuneRemote then KitsuneRemote:InvokeServer() end
+                end
+            end)
+        end
+    })
+   
+    task.spawn(function()
+        local Map = workspace:WaitForChild("Map", 9e9)
+        local Distance = "0"
+        task.spawn(function()
+            while task.wait() do
+                if Map:FindFirstChild("KitsuneIsland") then
+                    local plrPP = game:GetService("Players").LocalPlayer.Character and game:GetService("Players").LocalPlayer.Character:FindFirstChild("PrimaryPart")
+                    if plrPP then
+                        Distance = tostring(math.floor((plrPP.Position - Map.KitsuneIsland.WorldPivot.p).Magnitude / 3))
+                    end
+                end
+            end
+        end)
+        while task.wait() do
+            if Map:FindFirstChild("KitsuneIsland") then
+                if KILabel and KILabel.SetTitle then KILabel:SetTitle("Kitsune Island Spawned | Distance: " .. Distance) end
+            else
+                if KILabel and KILabel.SetTitle then KILabel:SetTitle("Kitsune Island not Spawn") end
+            end
+        end
+    end)
+    
+    AutoSea:AddSection({"Sea"})
+    AutoSea:AddToggle({
+        Name = "Auto Farm Sea",
+        Callback = function(Value)
+            getgenv().AutoFarmSea = Value
+            if type(AutoFarmSea) == "function" then AutoFarmSea() end
+        end
+    })
+    
+    AutoSea:AddButton({
+        Name = "Buy New Boat",
+        Callback = function()
+            if type(BuyNewBoat) == "function" then BuyNewBoat() end
+        end
+    })
+    
+    AutoSea:AddSection({"Material"})
+    AutoSea:AddToggle({
+        Name = "Auto Wood Planks",
+        Default = false,
+        Callback = function(Value)
+            getgenv().AutoWoodPlanks = Value
+        end
+    })
+    
+    AutoSea:AddSection({"Panic Mode"})
+    AutoSea:AddSlider({
+        Name = "Select Health",
+        Min = 20,
+        Max = 70,
+        Default = 25,
+        Callback = function(Value)
+            getgenv().HealthPanic = Value
+        end
+    })
+    
+    AutoSea:AddToggle({
+        Name = "Panic Mode",
+        Default = true,
+        Callback = function(Value)
+            getgenv().PanicMode = Value
+        end,
+        Flag = "Sea/PanicMode"
+    })
+    
+    AutoSea:AddSection({"Farm Select"})
+    AutoSea:AddToggle({
+        Name = "Terrorshark",
+        Flag = "Sea/TerrorShark",
+        Default = true,
+        Callback = function(Value) getgenv().Terrorshark = Value end
+    })
+    
+    AutoSea:AddToggle({
+        Name = "Piranha",
+        Flag = "Sea/Piranha",
+        Default = true,
+        Callback = function(Value) getgenv().Piranha = Value end
+    })
+    
+    AutoSea:AddToggle({
+        Name = "Shark",
+        Flag = "Sea/Shark",
+        Default = true,
+        Callback = function(Value) getgenv().Shark = Value end
+    })
+end
+
+if Sea3 and IsOwner then
+    local MirageTab = Window:MakeTab({"Race V4", ""})
+    
+    MirageTab:AddToggle({
+        Name = "Auto Pull Lever",
+        Default = false,
+        Callback = function(Value) end
+    })
+    
+    MirageTab:AddToggle({
+        Name = "Auto Stone Puzzle",
+        Default = false,
+        Callback = function(Value) end
+    })
+    
+    MirageTab:AddSection({"Auto Mirage"})
+    MirageTab:AddToggle({
+        Name = "Auto Find Mirage",
+        Default = false,
+        Callback = function(Value) end
+    })
+    
+    MirageTab:AddToggle({
+        Name = "Auto Gear Puzzle",
+        Default = false,
+        Callback = function(Value)
+            getgenv().AutoMiragePuzzle = Value
+            
+            local function LookToMoon()
+                local MoonDirection = game:GetService("Lighting"):GetMoonDirection()
+                local LookToPos = workspace.CurrentCamera.CFrame.p + MoonDirection * 100
+                workspace.CurrentCamera.CFrame = CFrame.lookAt(workspace.CurrentCamera.CFrame.p, LookToPos)
+            end
+            
+            local Connection = game:GetService("RunService").Heartbeat:Connect(LookToMoon)
+            while getgenv().AutoMiragePuzzle do task.wait() end
+            if Connection then Connection:Disconnect() end
+        end
+    })
+    
+    MirageTab:AddSection({"Auto Race"})
+    MirageTab:AddToggle({
+        Name = "Auto Finish Trial",
+        Default = false,
+        Callback = function(Value)
+            getgenv().AutoFinishTrial = Value
+            local PlayerRace = ""
+            
+            task.spawn(function()
+                while getgenv().AutoFinishTrial do 
+                    task.wait()
+                    if Player and Player:FindFirstChild("Data") and Player.Data:FindFirstChild("Race") then
+                        PlayerRace = Player.Data.Race.Value
+                    end
+                end
+            end)
+            
+            task.spawn(function()
+                while getgenv().AutoFinishTrial do 
+                    task.wait()
+                    if PlayerRace and type(PlayerRace) == "string" then
+                        if PlayerRace == "Cyborg" then
+                            if PlayerTP then PlayerTP(CFrame.new(28654, 14898, -30)) end
+                        elseif PlayerRace == "Ghoul" then
+                            if KillAura then KillAura() end
+                        elseif PlayerRace == "Human" then
+                            if KillAura then KillAura() end
+                        elseif PlayerRace == "Mink" then
+                            for _, part in pairs(workspace:GetDescendants()) do
+                                if part.Name == "StartPoint" then
+                                    if PlayerTP then PlayerTP(part.CFrame) end
+                                end
+                            end
+                        elseif PlayerRace == "Skypiea" then
+                            -- Corrected the broken HTML tag error present in the original text file
+                            pcall(function()
+                                for _, part in pairs(workspace.Map.SkyTrial.Model:GetDescendants()) do
+                                    if part.Name == "snowisland_Cylinder.081" then
+                                        if PlayerTP then PlayerTP(part.CFrame) end
+                                    end
+                                end
+                            end)
+                        end
+                    end
+                end
+            end)
+        end
+    })
+end
+
+local QuestsTabs = Window:MakeTab({"Quests/Items", "Swords"})
+local FruitAndRaid = Window:MakeTab({"Fruit/Raid", "Cherry"})
+
+if PlayerLevelValue < MaxLevelValue then
+    local StatsTab = Window:MakeTab({"Stats", "signal"})
+    local PointsSlider = 1
+    local Melee, Defense, Sword, Gun, DemonFruit = false, false, false, false, false
+    
+    StatsTab:AddToggle({
+        Name = "Auto Stats",
+        Flag = "Stats/AutoStats",
+        Callback = function(Value)
+            getgenv().AutoStats = Value
+        end
+    })
+    
+    StatsTab:AddSlider({
+        Name = "Select Points",
+        Flag = "Stats/SelectPoints",
+        Min = 1,
+        Max = 100,
+        Increase = 1,
+        Default = 1,
+        Callback = function(Value) PointsSlider = Value end
+    })
+end
+
+local Teleport = Window:MakeTab({"Teleport", "Locate"})
+local Visual = Window:MakeTab({"Visual", "User"})
+local Shop = Window:MakeTab({"Shop", "Shopping Cart"})
+local Misc = Window:MakeTab({"Misc", "Settings"})
+
+MainFarm:AddDropdown({
+    Name = "Farm Tool",
+    Options = {"Melee", "Sword", "Blox Fruit"},
+    Default = {"Melee"},
+    Flag = "Main/FarmTool",
+    Callback = function(Value)
+        getgenv().FarmTool = Value
     end
 })
 
-Tab1:AddSlider({
-  Name = "Speed",
-  Min = 1,
-  Max = 100,
-  Increase = 1,
-  Default = 16,
-  Callback = function(Value)
-  
-  end
+MainFarm:AddSection({"Farm"})
+MainFarm:AddToggle({
+    Name = "Auto Farm Level",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoFarm_Level = Value
+        if type(AutoFarm_Level) == "function" then AutoFarm_Level() end
+    end,
+    Description = "Level Farm"
 })
 
-local Dropdown = Tab1:AddDropdown({
-  Name = "Players List",
-  Description = "Select the <font color='rgb(88, 101, 242)'>Number</font>",
-  Options = {"one", "two", "three"},
-  Default = "two",
-  Flag = "dropdown teste",
-  Callback = function(Value)
-    
-  end
+MainFarm:AddToggle({
+    Name = "Auto Farm Nearest",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoFarmNearest = Value
+        if type(AutoFarmNearest) == "function" then AutoFarmNearest() end
+    end
 })
 
-Tab1:AddTextBox({
-  Name = "Name item",
-  Description = "1 Item on 1 Server", 
-  PlaceholderText = "item only",
-  Callback = function(Value)
-    
-  end
-})
+if Sea3 then
+    MainFarm:AddSection({"Bone"})
+end
